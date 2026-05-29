@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Form - Karbit Bike Rental</title>
+    <!-- Bootstrap & FontAwesome (Pasti Jalan di Acode) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', Roboto, sans-serif; padding: 20px 0 50px; }
+        .main-card { border: none; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); overflow: hidden; background: #fff; max-width: 850px; margin: auto; }
+        .header-box { background: #2d3436; color: white; padding: 45px 20px; text-align: center; }
+        .unit-badge { background: #fd7e14; color: white; padding: 6px 18px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; display: inline-block; margin-top: 12px; box-shadow: 0 4px 10px rgba(253,126,20,0.3); }
+        .section-title { color: #2d3436; font-weight: 800; font-size: 1.15rem; margin-bottom: 25px; display: flex; align-items: center; border-bottom: 2px solid #f1f1f1; padding-bottom: 12px; margin-top: 10px; }
+        .section-title i { color: #fd7e14; margin-right: 12px; font-size: 1.3rem; }
+        .form-label { font-size: 0.75rem; font-weight: 800; color: #636e72; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .form-control, .form-select { border-radius: 12px; padding: 13px; border: 1px solid #dfe6e9; background-color: #f9f9f9; font-size: 0.95rem; }
+        .form-control:focus { box-shadow: 0 0 0 4px rgba(253, 126, 20, 0.15); border-color: #fd7e14; background-color: #fff; }
+        .btn-submit { background: #2d3436; color: white; border: none; padding: 20px; border-radius: 18px; font-weight: 800; width: 100%; transition: 0.4s; margin-top: 30px; font-size: 1.1rem; letter-spacing: 1px; }
+        .btn-submit:hover { background: #000; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        textarea { resize: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="main-card">
+        <!-- Header Section -->
+        <div class="header-box">
+            <h1 class="fw-bold m-0" style="letter-spacing: -1px;">Finalize Your Booking</h1>
+            <div class="unit-badge" id="unitDisplay">Loading unit details...</div>
+        </div>
+
+        <!-- Form Section -->
+        <form id="bookingForm" class="p-4 p-md-5">
+            <!-- Hidden Inputs (Data Otomatis dari URL) -->
+            <input type="hidden" name="motor" id="inputMotor">
+            <input type="hidden" name="harga" id="inputHarga">
+
+            <!-- 1. Customer Information -->
+            <div class="section-title"><i class="fas fa-user-circle"></i> Customer Information</div>
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="nama" placeholder="e.g. John Doe" required class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">WhatsApp Number</label>
+                    <input type="tel" name="wa" placeholder="e.g. 62812345678" required class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" placeholder="john@example.com" required class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Instagram (Optional)</label>
+                    <input type="text" name="ig" placeholder="@username" class="form-control">
+                </div>
+            </div>
+
+            <!-- 2. Rental Schedule -->
+            <div class="section-title"><i class="fas fa-clock"></i> Rental Schedule</div>
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <label class="form-label">Pick-up Date & Time</label>
+                    <input type="datetime-local" name="mulai" id="inputMulai" required class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Return Date & Time</label>
+                    <input type="datetime-local" name="kembali" id="inputKembali" required class="form-control">
+                </div>
+            </div>
+
+            <!-- 3. Payment Information -->
+            <div class="section-title"><i class="fas fa-credit-card"></i> Payment Information</div>
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <label class="form-label">Payment Type</label>
+                    <select name="tipe_bayar" class="form-select">
+                        <option value="DP">Down Payment (DP)</option>
+                        <option value="FULL">Full Payment (Lunas)</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Amount Paid (IDR)</label>
+                    <input type="number" name="nominal" placeholder="e.g. 50000" required class="form-control">
+                </div>
+            </div>
+
+            <!-- 4. Delivery & Pickup -->
+            <div class="section-title"><i class="fas fa-map-marked-alt"></i> Delivery & Pickup</div>
+            <div class="row g-4 mb-2">
+                <div class="col-md-6">
+                    <label class="form-label">Delivery Location</label>
+                    <textarea name="antar" rows="3" placeholder="Hotel name / Address" required class="form-control"></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Pickup Location</label>
+                    <textarea name="jemput" rows="3" placeholder="Return location" required class="form-control"></textarea>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="btnSubmit" class="btn-submit shadow-lg">
+                CONFIRM & SEND BOOKING
+            </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="bg-light p-4 text-center text-muted" style="font-size: 0.75rem; border-top: 1px solid #eee;">
+            <strong>MRD Digital Solution</strong> &copy; 2024 - All Rights Reserved
+        </div>
+    </div>
+</div>
+
+<script>
+    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbztqieZAjsgdRXCTdEqvsmDinhnAzd3D1kISRFL1d_4jAJZfro8SLuIJ7FG4BqimYEI/exec"; // GANTI DENGAN URL GAS KARBIT
+
+    // FUNGSI AUTO-FILL SAAT HALAMAN DIBUKA
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        if(params.has('motor')) {
+            document.getElementById('inputMotor').value = params.get('motor');
+            document.getElementById('inputHarga').value = params.get('price');
+            document.getElementById('unitDisplay').innerText = `${params.get('brand')} ${params.get('type')} (${params.get('motor')})`;
+            
+            // Set Tanggal Default Jam 10:00
+            if(params.has('start')) document.getElementById('inputMulai').value = params.get('start') + "T10:00";
+            if(params.has('end')) document.getElementById('inputKembali').value = params.get('end') + "T10:00";
+        }
+    };
+
+    // FUNGSI KIRIM DATA KE WEBHOOK GAS
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        const formData = new FormData(e.target);
+        
+        // Logika DP vs Full Payment
+        let dp = 0; 
+        let bayar = 0;
+        if(formData.get('tipe_bayar') === "DP") { 
+            dp = formData.get('nominal'); 
+        } else { 
+            bayar = formData.get('nominal'); 
+        }
+
+        // Susun Pesan Format Bot Master Suhu
+        const pesan = `Booking
+No Motor: ${formData.get('motor')}
+Nama: ${formData.get('nama')}
+No WA: ${formData.get('wa')}
+Email: ${formData.get('email')}
+IG: ${formData.get('ig')}
+Jml Helm: 2
+Tgl Sewa: ${formatDate(formData.get('mulai'))}
+Tgl Kembali: ${formatDate(formData.get('kembali'))}
+Harga: ${formData.get('harga')}
+Byr DP: ${dp}
+Jml Byr: ${bayar}
+Status: Booked
+Alamat Jemput: ${formData.get('jemput')}
+Alamat Antar: ${formData.get('antar')}`;
+
+        btn.disabled = true;
+        btn.innerText = "PROCESSING...";
+
+        try {
+            const response = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    message: pesan, 
+                    sender: "WEB_FORM", 
+                    sessionId: "WEB" 
+                })
+            });
+            const result = await response.text();
+            alert("✅ Success!\n" + result);
+            window.location.href = "index.html";
+        } catch (error) {
+            alert("❌ Error. Please try again.");
+            console.error(error);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "CONFIRM & SEND BOOKING";
+        }
+    });
+
+    // Helper Format Tanggal (DD-MM-YYYY HH:mm)
+    function formatDate(dt) {
+        if(!dt) return "";
+        const d = new Date(dt);
+        const day = String(d.getDate()).padStart(2,'0');
+        const month = String(d.getMonth()+1).padStart(2,'0');
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2,'0');
+        const minutes = String(d.getMinutes()).padStart(2,'0');
+        return `${day}-${month}-${year} ${hours}:${minutes}`;
+    }
+</script>
+</body>
+</html>

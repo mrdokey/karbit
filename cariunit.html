@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- Google Ads / Analytics Snippet Tetap Di Sini -->
+    <script async src=""></script> 
+    <script> 
+      window.dataLayer = window.dataLayer || []; 
+      function gtag(){dataLayer.push(arguments);} 
+      gtag('js', new Date()); 
+      gtag('config', ''); 
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karbit Bike Rental - Booking System</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3721/3721619.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body.lang-id .en { display: none !important; }
+        body.lang-en .id { display: none !important; }
+        .hero { background: #343a40; color: white; padding: 60px 0; text-align: center; margin-bottom: 30px; }
+        .card-motor { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: 0.3s; overflow: hidden; background: #fff; }
+        .card-motor:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); border-color: #007bff; }
+        .search-box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-top: -80px; }
+        .btn-primary { background-color: #007bff; border: none; padding: 12px; }
+        .btn-success { padding: 10px; border-radius: 8px; }
+        .placeholder-text { color: #adb5bd; margin-top: 50px; font-weight: 300; }
+        .img-wrapper { position: relative; height: 220px; overflow: hidden; border-radius: 15px 15px 0 0; background: #eee; }
+        .img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .available-badge { position: absolute; top: 15px; left: 15px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .floating-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            display: flex; justify-content: space-around; padding: 12px 0 20px;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.08); z-index: 2000;
+            border-radius: 25px 25px 0 0; border-top: 1px solid rgba(255,255,255,0.3);
+        }
+        .nav-item { text-align: center; color: #555; text-decoration: none; font-size: 0.65rem; font-weight: 600; cursor: pointer; flex: 1; }
+        .nav-item i { display: block; font-size: 1.3rem; color: #f39c12; margin-bottom: 4px; transition: 0.2s; }
+        #motorContainer { padding-bottom: 100px; }
+    </style>
+</head>
+<body class="lang-id">
+
+<div class="hero">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Karbit Bike Rental</h1>
+        <p class="lead">Select your rental dates to see available models</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="search-box mb-5">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label fw-bold text-secondary">Pick-up Date</label>
+                <input type="date" id="start" class="form-control form-control-lg">
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-bold text-secondary">Return Date</label>
+                <input type="date" id="end" class="form-control form-control-lg">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button onclick="handleFilter()" class="btn btn-primary w-100 fw-bold btn-lg">Search</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Checking fleet availability...</p>
+    </div>
+
+    <div id="placeholder" class="text-center py-5">
+        <h2 class="placeholder-text">Please select dates to check availability.</h2>
+    </div>
+
+    <div class="row" id="motorContainer"></div>
+</div>
+
+<!-- MODAL BOOKING (UPDATE: DENGAN TOMBOL FORM & WA FORMAT BOT) -->
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Confirm Selection</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4" id="modalBody">
+        <!-- Diisi via JS -->
+      </div>
+      <div class="modal-footer border-0 flex-column">
+        <!-- Tombol Baru: Menuju Form Online -->
+        <button type="button" id="goToFormBtn" class="btn btn-primary w-100 py-3 fw-bold mb-2 shadow-sm">
+            <i class="fas fa-file-signature me-2"></i>Book via Online Form
+        </button>
+        <div class="d-flex w-100 gap-2">
+            <button type="button" class="btn btn-light flex-grow-1" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" id="confirmWaBtn" class="btn btn-success flex-grow-1 fw-bold">
+                <i class="fab fa-whatsapp me-2"></i>WhatsApp
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Nav Bawah -->
+<div class="floating-nav">
+    <a href="index.html" class="nav-item"><i class="fas fa-home"></i>Home</a>
+    <a href="showunit.html" class="nav-item"><i class="fas fa-motorcycle"></i>Armada</a>
+    <a href="index.html#layanan" class="nav-item"><i class="fas fa-hand-holding-heart"></i>Layanan</a>
+    <a href="cariunit.html" class="nav-item"><i class="fas fa-calendar-check"></i>Cek Unit</a>
+    <a href="https://wa.me/6281916283858" class="nav-item"><i class="fab fa-whatsapp"></i>WhatsApp</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbztqieZAjsgdRXCTdEqvsmDinhnAzd3D1kISRFL1d_4jAJZfro8SLuIJ7FG4BqimYEI/exec";
+    const adminNumber = "6281916283858"; 
+
+    let motors = [];
+    let bookings = [];
+    let isDataLoaded = false;
+
+    function getAutoImage(type) {
+        const t = type.toLowerCase();
+        if (t.includes("nmax")) return "https://i.ibb.co.com/1JzVD8KB/NMAX-NEO-S-BLACK.png";
+        if (t.includes("vespa")) return "https://i.ibb.co.com/WpjDP07V/harga-vespa-matic-2023-1.webp";
+        if (t.includes("scoopy")) return "https://www.wahanahonda.com/assets/upload/produk/gambar/PRODUK_GAMBAR_48_2025-11-13.webp";
+        if (t.includes("vario")) return "https://i.ibb.co.com/9kbm6Pwh/images-15.jpg";
+        if (t.includes("beat")) return "https://i.ibb.co.com/BHDpWZXS/honda-beat-deluxe-smart-key-deluxe-matte-blue-01-warna.webp";
+        if (t.includes("fazzio")) return "https://i.ibb.co.com/nqgDF9kV/images-11.jpg";
+        if (t.includes("stylo")) return "https://i.ibb.co.com/ycFPFg1k/008881800-1706860240-20240202-144627.jpg";
+        if (t.includes("filano")) return "https://cdn.antaranews.com/cache/1200x800/2024/11/07/1000446916.jpg";
+        if (t.includes("avanza manual")) return "https://i.ibb.co.com/dCwwwJ6/3205132941.jpg";
+        if (t.includes("xenia")) return "https://dsoodysseusstprod.blob.core.windows.net/strapi-media/assets/sys_master_media_h6d_h39_8819370557470_Xenia_20terbaru_132bc6a428.jpg";
+        return "https://i.ibb.co.com/WpjDP07V/harga-vespa-matic-2023-1.webp";
+    }
+
+    async function fetchData() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            motors = data.items;
+            bookings = data.bookings;
+            isDataLoaded = true;
+        } catch (error) { console.error("Error:", error); }
+    }
+
+    function isOccupied(plate, startReq, endReq) {
+        const sReq = new Date(startReq);
+        const eReq = new Date(endReq);
+        return bookings.some(b => {
+            if (b.no_motor !== plate) return false;
+            return (sReq < new Date(b.end) && eReq > new Date(b.start));
+        });
+    }
+
+    function renderList(sDate, eDate) {
+        const container = document.getElementById('motorContainer');
+        container.innerHTML = "";
+        let availableGroups = {};
+        let totalAvailable = 0;
+
+        motors.forEach(m => {
+            const plate = m[0], type = m[1], brand = m[2], price = m[3], status = m[5];
+            if (status === "Bengkel" || isOccupied(plate, sDate, eDate)) return;
+            totalAvailable++;
+            const groupKey = `${brand}_${type}`;
+            if (!availableGroups[groupKey]) {
+                availableGroups[groupKey] = { brand, type, price, count: 0, samplePlate: plate, image: getAutoImage(type) };
+            }
+            availableGroups[groupKey].count++;
+        });
+
+        if (totalAvailable === 0) {
+            container.innerHTML = `<div class="text-center py-5 w-100"><h3>😔 Sorry, we are fully booked for these dates.</h3></div>`;
+            return;
+        }
+
+        for (const key in availableGroups) {
+            const group = availableGroups[key];
+            container.innerHTML += `
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card card-motor h-100 p-0 text-center border-top border-4 border-primary">
+                        <div class="img-wrapper">
+                            <span class="badge bg-primary available-badge rounded-pill">${group.count} Unit(s) Available</span>
+                            <img src="${group.image}" alt="${group.type}">
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-between p-4">
+                            <div>
+                                <h4 class="fw-bold text-dark mb-0 text-uppercase">${group.brand}</h4>
+                                <h5 class="text-secondary mb-4">${group.type}</h5>
+                                <div class="bg-light p-3 rounded mb-4">
+                                    <span class="d-block text-muted" style="font-size:0.85rem">Daily Rate</span>
+                                    <span class="fw-bold fs-4 text-dark">IDR ${Number(group.price).toLocaleString('id-ID')}</span>
+                                </div>
+                            </div>
+                            <button onclick="openBooking('${group.brand}', '${group.type}', '${group.price}', '${group.samplePlate}')" class="btn btn-success fw-bold w-100 py-3">Book Now</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+    }
+
+    async function handleFilter() {
+        const start = document.getElementById('start').value;
+        const end = document.getElementById('end').value;
+        if (!start || !end) { alert("Please select dates."); return; }
+        document.getElementById('placeholder').style.display = 'none';
+        document.getElementById('motorContainer').innerHTML = "";
+        document.getElementById('loading').style.display = 'block';
+        if (!isDataLoaded) await fetchData();
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+            renderList(start, end);
+        }, 600);
+    }
+
+    // ============================================================
+    // LOGIKA MODAL: REDIRECT KE FORM & FORMAT WA BOT
+    // ============================================================
+    function openBooking(brand, type, harga, referensiPlat) {
+        const sDate = document.getElementById('start').value;
+        const eDate = document.getElementById('end').value;
+        const modelName = `${brand} ${type}`;
+        
+        const modalBody = document.getElementById('modalBody');
+        modalBody.innerHTML = `
+            <div class="text-center mb-4">
+                <h4 class="fw-bold text-dark">${modelName}</h4>
+                <p class="text-muted small">Excellent Choice!</p>
+            </div>
+            <div class="bg-light p-3 rounded shadow-sm">
+                <div class="d-flex justify-content-between mb-2">
+                    <span><b>Pick-up:</b></span> <span class="fw-bold text-primary">${sDate}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span><b>Return:</b></span> <span class="fw-bold text-primary">${eDate}</span>
+                </div>
+                <div class="d-flex justify-content-between border-top pt-3 mt-3">
+                    <span><b>Daily Rate:</b></span> <span class="text-success fw-bold fs-5">IDR ${Number(harga).toLocaleString('id-ID')}</span>
+                </div>
+            </div>
+        `;
+
+        // 1. LOGIKA TOMBOL FORM ONLINE (Kirim data via URL)
+        document.getElementById('goToFormBtn').onclick = () => {
+            const urlParams = new URLSearchParams({
+                motor: referensiPlat,
+                brand: brand,
+                type: type,
+                start: sDate,
+                end: eDate,
+                price: harga
+            });
+            window.location.href = `form.html?${urlParams.toString()}`;
+        };
+
+        // 2. LOGIKA TOMBOL WA (Format Pesan Bot AMS Pro)
+        document.getElementById('confirmWaBtn').onclick = () => {
+            // Google Ads Conversion
+            if(typeof gtag === 'function') {
+                gtag('event', 'conversion', {'send_to': 'AW-18085643358/ZDZwCI_MxZwcEKLrprND','value': 1.0,'currency': 'IDR'});
+            }
+
+            // Format pesan disesuaikan agar admin tinggal copas ke Bot Master
+            const text = `Booking%0ANo Motor: ${referensiPlat}%0ANama: [Isi Nama]%0ANo WA: [Isi No WA]%0AEmail: [Isi Email]%0AJml Helm: 2%0ATgl Sewa: ${sDate} 10:00%0ATgl Kembali: ${eDate} 10:00%0AHarga: ${harga}%0AAlamat Jemput: [Isi Lokasi]%0AAlamat Antar: [Isi Lokasi]`;
+            
+            window.open(`https://wa.me/${adminNumber}?text=${text}`, '_blank');
+        };
+
+        const myModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+        myModal.show();
+    }
+
+    fetchData();
+</script>
+</body>
+</html>
