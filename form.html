@@ -18,7 +18,7 @@
         .form-label { font-size: 0.75rem; font-weight: 800; color: #636e72; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
         .form-control, .form-select { border-radius: 12px; padding: 13px; border: 1px solid #dfe6e9; background-color: #f9f9f9; font-size: 0.95rem; }
         .form-control:focus { box-shadow: 0 0 0 4px rgba(253, 126, 20, 0.15); border-color: #fd7e14; background-color: #fff; }
-        .btn-submit { background: #2d3436; color: white; border: none; padding: 20px; border-radius: 18px; font-weight: 800; width: 100%; transition: 0.4s; margin-top: 30px; font-size: 1.1rem; letter-spacing: 1px; }
+        .btn-submit { background: #2d3436; color: white; border: none; padding: 20px; border-radius: 18px; font-weight: 800; width: 100%; transition: 0.4s; margin-top: 20px; font-size: 1.1rem; letter-spacing: 1px; }
         .btn-submit:hover { background: #000; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         textarea { resize: none; }
         .addon-box { border: 1px solid #dfe6e9; padding: 15px; border-radius: 12px; background: #f9f9f9; transition: 0.3s; }
@@ -75,7 +75,7 @@
                 </div>
             </div>
 
-            <!-- 3. ADD-ONS & LAYANAN TAMBAHAN (BARU) -->
+            <!-- 3. ADD-ONS & LAYANAN TAMBAHAN -->
             <div class="section-title"><i class="fas fa-plus-circle"></i> Add-ons & Services</div>
             <div class="row g-3 mb-5">
                 <div class="col-md-4">
@@ -107,7 +107,7 @@
                 </div>
             </div>
 
-            <!-- 4. Payment Information (UPDATE: ENUM PAYMENT METHOD) -->
+            <!-- 4. Payment Information -->
             <div class="section-title"><i class="fas fa-credit-card"></i> Payment Information</div>
             <div class="row g-4 mb-5">
                 <div class="col-md-4">
@@ -135,7 +135,7 @@
 
             <!-- 5. Delivery & Pickup -->
             <div class="section-title"><i class="fas fa-map-marked-alt"></i> Delivery & Pickup</div>
-            <div class="row g-4 mb-2">
+            <div class="row g-4 mb-5">
                 <div class="col-md-6">
                     <label class="form-label">Delivery Location</label>
                     <textarea name="antar" rows="3" placeholder="Hotel name / Address" required class="form-control"></textarea>
@@ -143,6 +143,36 @@
                 <div class="col-md-6">
                     <label class="form-label">Pickup Location</label>
                     <textarea name="jemput" rows="3" placeholder="Return location" required class="form-control"></textarea>
+                </div>
+            </div>
+
+            <!-- 6. LIVE PRICE SUMMARY (KOTAK KALKULATOR TOTAL HARGA REAL-TIME) -->
+            <div class="section-title"><i class="fas fa-receipt"></i> Price Details</div>
+            <div class="bg-light p-4 rounded-3 border mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Rental Duration:</span>
+                    <span class="fw-bold text-dark" id="lblDurasi">1 Day(s)</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Base Rental Fee:</span>
+                    <span class="fw-bold text-dark" id="lblBase">IDR 0</span>
+                </div>
+                <div class="justify-content-between mb-2 text-danger" id="rowInsurance" style="display: none !important;">
+                    <span><i class="fas fa-shield-alt me-1"></i> Motor Insurance:</span>
+                    <span class="fw-bold" id="lblInsurance">+IDR 0</span>
+                </div>
+                <div class="justify-content-between mb-2 text-danger" id="rowSurface" style="display: none !important;">
+                    <span><i class="fas fa-soap me-1"></i> Surface / Cleaning Fee:</span>
+                    <span class="fw-bold" id="lblSurface">+IDR 0</span>
+                </div>
+                <div class="justify-content-between mb-2 text-danger" id="rowHolder" style="display: none !important;">
+                    <span><i class="fas fa-mobile-alt me-1"></i> Phone Holder Accessories:</span>
+                    <span class="fw-bold" id="lblHolder">+IDR 0</span>
+                </div>
+                <hr class="my-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark fs-5">Estimated Grand Total:</span>
+                    <span class="fw-bold text-success fs-4" id="lblGrandTotal">IDR 0</span>
                 </div>
             </div>
 
@@ -173,16 +203,71 @@
             // Set Tanggal Default Jam 10:00
             if(params.has('start')) document.getElementById('inputMulai').value = params.get('start') + "T10:00";
             if(params.has('end')) document.getElementById('inputKembali').value = params.get('end') + "T10:00";
+            
+            // Hitung total awal saat halaman selesai di-load
+            hitungTotal();
         }
     };
 
-    // FUNGSI KIRIM DATA KE WEBHOOK GAS
+    // FUNGSI KALKULATOR TOTAL BIAYA HARIAN & ADD-ONS (LIVE UPDATE)
+    function hitungTotal() {
+        const hargaHarian = parseInt(document.getElementById('inputHarga').value) || 0;
+        const tglMulaiVal = document.getElementById('inputMulai').value;
+        const tglKembaliVal = document.getElementById('inputKembali').value;
+
+        if (!tglMulaiVal || !tglKembaliVal) return;
+
+        const dMulai = new Date(tglMulaiVal);
+        const dKembali = new Date(tglKembaliVal);
+        
+        let jmlHari = 1;
+        if (dKembali > dMulai) {
+            const selisihWaktu = Math.abs(dKembali - dMulai);
+            jmlHari = Math.ceil(selisihWaktu / (1000 * 60 * 60 * 24)) || 1;
+        }
+
+        // Hitung Biaya Pokok
+        const baseRental = hargaHarian * jmlHari;
+
+        // Hitung Add-ons
+        const insChecked = document.getElementById('chkInsurance').checked;
+        const surfChecked = document.getElementById('chkSurface').checked;
+        const holdChecked = document.getElementById('chkHolder').checked;
+
+        const valInsurance = insChecked ? (50000 * jmlHari) : 0;
+        const valSurface = surfChecked ? 50000 : 0;
+        const valHolder = holdChecked ? 15000 : 0;
+
+        const grandTotal = baseRental + valInsurance + valSurface + valHolder;
+
+        // Tampilkan / Sembunyikan baris add-on di bagian ringkasan jika dicentang
+        document.getElementById('rowInsurance').style.setProperty('display', insChecked ? 'flex' : 'none', 'important');
+        document.getElementById('rowSurface').style.setProperty('display', surfChecked ? 'flex' : 'none', 'important');
+        document.getElementById('rowHolder').style.setProperty('display', holdChecked ? 'flex' : 'none', 'important');
+
+        // Update UI Label
+        document.getElementById('lblDurasi').innerText = `${jmlHari} Day(s)`;
+        document.getElementById('lblBase').innerText = `IDR ${baseRental.toLocaleString('id-ID')}`;
+        document.getElementById('lblInsurance').innerText = `+IDR ${valInsurance.toLocaleString('id-ID')}`;
+        document.getElementById('lblSurface').innerText = `+IDR ${valSurface.toLocaleString('id-ID')}`;
+        document.getElementById('lblHolder').innerText = `+IDR ${valHolder.toLocaleString('id-ID')}`;
+        document.getElementById('lblGrandTotal').innerText = `IDR ${grandTotal.toLocaleString('id-ID')}`;
+    }
+
+    // PASANG EVENT LISTENER UNTUK AUTOMATIC LIVE CALCULATION
+    document.getElementById('inputMulai').addEventListener('change', hitungTotal);
+    document.getElementById('inputKembali').addEventListener('change', hitungTotal);
+    document.getElementById('chkInsurance').addEventListener('change', hitungTotal);
+    document.getElementById('chkSurface').addEventListener('change', hitungTotal);
+    document.getElementById('chkHolder').addEventListener('change', hitungTotal);
+
+
+    // FUNGSI SUBMIT KE WEBHOOK GAS
     document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
         const formData = new FormData(e.target);
         
-        // Logika DP vs Full Payment
         let dp = 0; 
         let bayar = 0;
         if(formData.get('tipe_bayar') === "DP") { 
@@ -191,7 +276,7 @@
             bayar = formData.get('nominal'); 
         }
 
-        // Kalkulasi Otomatis Nilai Add-on Berdasarkan Hari Sewa
+        // Ambil kalkulasi terakhir saat submit
         const dMulai = new Date(formData.get('mulai'));
         const dKembali = new Date(formData.get('kembali'));
         const selisihWaktu = Math.abs(dKembali - dMulai);
@@ -201,7 +286,7 @@
         const valSurface = document.getElementById('chkSurface').checked ? 50000 : 0;
         const valHolder = document.getElementById('chkHolder').checked ? 15000 : 0;
 
-        // Susun Pesan Format Bot Master Suhu (Ditambahkan parameter baru)
+        // Susun Pesan Format Bot Master Suhu
         const pesan = `Booking
 No Motor: ${formData.get('motor')}
 Nama: ${formData.get('nama')}
@@ -246,7 +331,6 @@ Alamat Antar: ${formData.get('antar')}`;
         }
     });
 
-    // Helper Format Tanggal (DD-MM-YYYY HH:mm)
     function formatDate(dt) {
         if(!dt) return "";
         const d = new Date(dt);
